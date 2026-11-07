@@ -204,7 +204,7 @@ function suaraHewan(h, done){
     if(i >= exts.length){ cadangan(); return; }
     let lanjut = false, mulai = false;
     const berikut = () => { if(!lanjut && !mulai){ lanjut = true; coba(i+1); } };
-    const a = new Audio('suara/' + h.file + '.' + exts[i]);
+       const a = new Audio(h.file + '.' + exts[i]);
     a.onplaying = () => { mulai = true; };
     a.onended = fin;
     a.onerror = berikut;
