@@ -210,17 +210,10 @@ function suaraHewan(h, done){
     a.onerror = berikut;
     const p = a.play();
     if(p && p.catch) p.catch(berikut);
-    setTimeout(() => { if(!mulai){ a.pause(); berikut(); } }, 1200);
+    setTimeout(() => { if(!mulai){ a.pause(); berikut(); } }, 5000);
   };
   coba(0);
-  setTimeout(fin, 8000);
-}
-
-// ================= ALUR GAME =================
-function tesSuara(){
-  try{ getAC(); }catch(e){}
-  tingBenar();
-  setTimeout(() => speak(`Halo ${NAMA}! Ayo belajar`), 600);
+  setTimeout(fin, 15000);
 }
 
 function start(m){
