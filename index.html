@@ -123,19 +123,24 @@ try{
   speechSynthesis.onvoiceschanged = pilihSuara;
 }catch(e){}
 
+const _utt = [];
 function say(t, onend){
   let selesai = false;
   const fin = () => { if(!selesai){ selesai = true; if(onend) onend(); } };
   try{
     const u = new SpeechSynthesisUtterance(t);
-    u.lang = 'id-ID'; u.rate = .85; u.pitch = 1.2; u.volume = 1;
-    if(suaraPilihan) u.voice = suaraPilihan;
+    u.lang = 'id-ID'; u.rate = .9; u.pitch = 1; u.volume = 1;
     u.onend = fin; u.onerror = fin;
+    _utt.push(u); if(_utt.length > 10) _utt.shift(); // cegah dibuang Chrome
+    speechSynthesis.resume();
     speechSynthesis.speak(u);
-    setTimeout(fin, 6000 + t.length*150); // cadangan
+    setTimeout(fin, 6000 + t.length*150);
   }catch(e){ fin(); }
 }
-function speak(t){ try{ speechSynthesis.cancel(); }catch(e){} say(t); }
+function speak(t){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  setTimeout(() => say(t), 150);
+}
 
 // ================= NADA & SUARA BUATAN =================
 let ac;
@@ -218,6 +223,7 @@ function suaraHewan(h, done){
 
 function start(m){
   try{ getAC(); }catch(e){}
+  try{ speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
   mode = m; score = 0; renderStars();
   $('menu').classList.add('hidden');
   $('game').classList.remove('hidden');
