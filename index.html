@@ -22,6 +22,7 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 .choices{display:flex;justify-content:center;gap:14px;padding:16px;flex-wrap:wrap}
 .choice{width:28vw;max-width:150px;height:28vw;max-height:150px;background:#fff;border:none;border-radius:28px;font-size:4.5rem;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 0 rgba(0,0,0,.18)}
 .choice:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.ar{font-family:'Noto Naskh Arabic','Traditional Arabic','Geeza Pro',serif;color:#1b5e20}
 .dot{width:70%;height:70%;border-radius:50%}
 .shake{animation:shake .4s}
 @keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
@@ -44,6 +45,7 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
     <button style="background:#43a047" onclick="start('hewan')"><span>🐶</span>Hewan</button>
     <button style="background:#1e88e5" onclick="start('bentuk')"><span>🔷</span>Bentuk</button>
     <button style="background:#fb8c00" onclick="start('angka')"><span>🔢</span>Hitung</button>
+    <button style="background:#00897b;grid-column:span 2" onclick="start('hijaiyah')"><span>🕌</span>Huruf Hijaiyah</button>
     <button style="background:#8e24aa;grid-column:span 2" onclick="startJalan()"><span>🐰</span>Jalan</button>
   </div>
   <button class="tes" onclick="tesSuara()">🔊 Tes Suara</button>
@@ -76,7 +78,22 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 const NAMA = 'Hasan';
 // ====================================
 
+// Jumlah huruf hijaiyah yang dipakai (1-28). Untuk mulai dari yang mudah, ubah ke 10.
+const JUMLAH_HURUF = 28;
+
 const dot = c => `<div class="dot" style="background:${c}"></div>`;
+const HIJAIYAH = [
+  {name:'alif',  view:'ا'},{name:'ba',    view:'ب'},{name:'ta',    view:'ت'},
+  {name:'tsa',   view:'ث'},{name:'jim',   view:'ج'},{name:'ha',    view:'ح'},
+  {name:'kho',   view:'خ'},{name:'dal',   view:'د'},{name:'dzal',  view:'ذ'},
+  {name:'ro',    view:'ر'},{name:'zay',   view:'ز'},{name:'sin',   view:'س'},
+  {name:'syin',  view:'ش'},{name:'shod',  view:'ص'},{name:'dhod',  view:'ض'},
+  {name:'tho',   view:'ط'},{name:'zho',   view:'ظ'},{name:'ain',   view:'ع'},
+  {name:'ghoin', view:'غ'},{name:'fa',    view:'ف'},{name:'qof',   view:'ق'},
+  {name:'kaf',   view:'ك'},{name:'lam',   view:'ل'},{name:'mim',   view:'م'},
+  {name:'nun',   view:'ن'},{name:'wawu',  view:'و'},{name:'ha',    view:'ه'},
+  {name:'ya',    view:'ي'}
+];
 const DATA = {
   warna: [
     {name:'merah',  view:dot('#e53935')},
@@ -112,7 +129,8 @@ const DATA = {
     {name:'segitiga',  view:'🔺'},{name:'bintang',   view:'⭐'},
     {name:'hati',      view:'❤️'}
   ],
-  angka: [1,2,3,4,5].map(n => ({name:String(n), view:String(n)}))
+  angka: [1,2,3,4,5].map(n => ({name:String(n), view:String(n)})),
+  hijaiyah: HIJAIYAH.slice(0, JUMLAH_HURUF)
 };
 
 let mode, target, score = 0, locked = false, tanyaSuara = false;
@@ -258,6 +276,7 @@ function renderStars(){ $('stars').textContent = '⭐'.repeat(Math.min(score,10)
 function questionText(){
   if(mode==='angka') return 'Ada berapa apel?';
   if(mode==='warna') return `Mana yang warna ${target.name}?`;
+  if(mode==='hijaiyah') return `Mana huruf ${target.name}?`;
   if(mode==='hewan'){
     return tanyaSuara ? 'Siapa yang bersuara...'
                       : `Mana gambar ${target.name}?`;
@@ -278,7 +297,12 @@ function ulang(){
 
 function next(){
   locked = false;
-  const opts = shuffle(DATA[mode]).slice(0,3);
+  // ambil 3 pilihan dengan nama berbeda (supaya dua huruf "ha" tidak muncul bersamaan)
+  const opts = [];
+  for(const p of shuffle(DATA[mode])){
+    if(!opts.some(x => x.name === p.name)) opts.push(p);
+    if(opts.length === 3) break;
+  }
   target = acak(opts);
   tanyaSuara = (mode==='hewan' && Math.random() < .5);
   $('stage').innerHTML = mode==='angka' ? '🍎'.repeat(+target.name)
@@ -287,7 +311,7 @@ function next(){
   $('choices').innerHTML = '';
   opts.forEach(o => {
     const b = document.createElement('button');
-    b.className = 'choice';
+    b.className = 'choice' + (mode==='hijaiyah' ? ' ar' : '');
     b.innerHTML = o.view;
     b.onclick = () => jawab(b, o);
     $('choices').appendChild(b);
@@ -310,6 +334,7 @@ function jawab(btn, o){
     setTimeout(go, 20000); // cadangan
 
     const ucapan = () => {
+      if(mode === 'hijaiyah') say(`Ini huruf ${o.name}`);
       say(`Alhamdulillah, ${NAMA} betul!`);
       say(`Ayo lanjutkan ${NAMA}!`, go);
     };
