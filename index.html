@@ -29,14 +29,14 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 @keyframes pop{50%{transform:scale(1.25)}}
 .fall{position:fixed;top:-50px;font-size:2.5rem;animation:fall 1.6s linear forwards;pointer-events:none}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
-@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
-.jgrid{display:grid;...}
-.jc{aspect-ratio:1;...}
+.jgrid{display:grid;gap:8px;max-width:340px;margin:10px auto;padding:0 16px}
+.jc{aspect-ratio:1;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;border:none;background:#fff3b0;box-shadow:0 4px 0 rgba(0,0,0,.18);padding:0}
 .jc.blok{background:#43a047}
 .jc.lalu{background:#ffd54f}
 </style>
 </head>
 <body>
+
 <div id="menu">
   <h1>Belajar Yuk! 🌈</h1>
   <div class="menu">
@@ -70,7 +70,8 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
   <div id="jq" style="font-size:1.6rem;font-weight:bold;color:#5d4037;margin:6px 12px">Bantu kelinci ke wortel!</div>
   <div class="jgrid" id="jgrid"></div>
 </div>
-  <script>
+
+<script>
 // ====== UBAH NAMA ANAK DI SINI ======
 const NAMA = 'Hasan';
 // ====================================
@@ -121,22 +122,6 @@ const shuffle = a => [...a].sort(() => Math.random() - .5);
 const acak = a => a[Math.floor(Math.random()*a.length)];
 
 // ================= SUARA UCAPAN =================
-let suaraPilihan = null;
-function pilihSuara(){
-  try{
-    const v = speechSynthesis.getVoices();
-    if(!v.length) return;
-    suaraPilihan = v.find(x => /^id/i.test(x.lang) || /indones/i.test(x.name)) || null;
-    $('info').textContent = suaraPilihan
-      ? ''
-      : 'Catatan: suara bahasa Indonesia belum terpasang di perangkat ini, jadi ucapan memakai suara lain.';
-  }catch(e){}
-}
-try{
-  pilihSuara();
-  speechSynthesis.onvoiceschanged = pilihSuara;
-}catch(e){}
-
 const _utt = [];
 function say(t, onend){
   let selesai = false;
@@ -208,6 +193,7 @@ const SINTETIS = {
   ikan:    [['sine',400,900,0,.12,.4],['sine',500,1000,.25,.12,.4],['sine',450,950,.5,.12,.4],['sine',600,1100,.75,.12,.4]]
 };
 
+// ================= SUARA HEWAN (maks DURASI_MAKS detik) =================
 const DURASI_MAKS = 2; // detik, ubah angka ini kalau mau lebih pendek/panjang
 
 function suaraHewan(h, done){
@@ -228,7 +214,6 @@ function suaraHewan(h, done){
     a.onplaying = () => {
       if(mulai) return;
       mulai = true;
-      // fade out pelan mulai 0,5 detik sebelum batas, lalu berhenti
       setTimeout(() => {
         const iv = setInterval(() => {
           if(a.volume > .1){ a.volume = Math.max(0, a.volume - .2); }
@@ -245,6 +230,13 @@ function suaraHewan(h, done){
   };
   coba(0);
   setTimeout(fin, 15000);
+}
+
+// ================= ALUR GAME =================
+function tesSuara(){
+  try{ getAC(); }catch(e){}
+  tingBenar();
+  setTimeout(() => speak(`Halo ${NAMA}! Ayo belajar`), 600);
 }
 
 function start(m){
@@ -275,7 +267,7 @@ function questionText(){
 function ulang(){
   try{ speechSynthesis.cancel(); }catch(e){}
   if(mode==='hewan' && tanyaSuara){
-    // 1) sistem: "Siapa yang bersuara"  2) rekaman Anda (mbek mbek)
+    // 1) sistem: "Siapa yang bersuara"  2) rekaman hewan
     say('Siapa yang bersuara', () => {
       setTimeout(() => suaraHewan(target, () => {}), 200);
     });
@@ -323,7 +315,6 @@ function jawab(btn, o){
     };
 
     if(mode === 'hewan'){
-      // 1) suara hewan  2) "Alhamdulillah Hasan betul"
       suaraHewan(o, () => setTimeout(ucapan, 300));
     } else {
       tingBenar();
@@ -349,6 +340,7 @@ function confetti(){
     setTimeout(() => s.remove(), 2200);
   }
 }
+
 // ================= GAME JALAN =================
 const JR = 4, JC = 3; // jumlah baris dan kolom (boleh diubah)
 let jgrid = [], jpos = [0,0], jgoal = [0,0], jvisited = {};
@@ -373,6 +365,7 @@ function buatJalan(){
   dfs(0, sc);
   jgrid = Array.from({length:JR}, () => Array(JC).fill(0));
   path.forEach(([r,c]) => jgrid[r][c] = 1);
+  // jalan buntu (pengecoh)
   for(let r=0;r<JR;r++) for(let c=0;c<JC;c++){
     if(!jgrid[r][c] && Math.random() < .3) jgrid[r][c] = 1;
   }
@@ -424,11 +417,11 @@ function tapJalan(btn, r, c){
   if(locked) return;
   try{ getAC(); }catch(e){}
   const jarak = Math.abs(r - jpos[0]) + Math.abs(c - jpos[1]);
-  if(jarak !== 1){
+  if(jarak !== 1){ // bukan kotak sebelah kelinci
     btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
     return;
   }
-  if(!jgrid[r][c]){
+  if(!jgrid[r][c]){ // pohon: salah
     btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
     tingSalah();
     try{ speechSynthesis.cancel(); }catch(e){}
@@ -444,14 +437,13 @@ function tapJalan(btn, r, c){
     try{ speechSynthesis.cancel(); }catch(e){}
     let lanjut = false;
     const go = () => { if(!lanjut){ lanjut = true; nextJalan(); } };
-    setTimeout(go, 15000);
+    setTimeout(go, 15000); // cadangan
     setTimeout(() => {
       say(`Alhamdulillah, ${NAMA} betul!`);
       say(`Ayo lanjutkan ${NAMA}!`, go);
     }, 700);
   }
 }
-  
-  </script>
+</script>
 </body>
 </html>
