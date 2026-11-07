@@ -234,13 +234,21 @@ function questionText(){
   if(mode==='angka') return 'Ada berapa apel?';
   if(mode==='warna') return `Mana yang warna ${target.name}?`;
   if(mode==='hewan'){
-    return tanyaSuara ? `Siapa yang bersuara ${target.bunyi}?`
+    return tanyaSuara ? 'Siapa yang bersuara...'
                       : `Mana gambar ${target.name}?`;
   }
   return `Mana yang ${target.name}?`;
 }
 function ulang(){
-  speak(questionText());
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(mode==='hewan' && tanyaSuara){
+    // 1) sistem: "Siapa yang bersuara"  2) rekaman Anda (mbek mbek)
+    say('Siapa yang bersuara', () => {
+      setTimeout(() => suaraHewan(target, () => {}), 200);
+    });
+  } else {
+    say(questionText());
+  }
 }
 
 function next(){
