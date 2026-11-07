@@ -194,14 +194,15 @@ const SINTETIS = {
   ikan:    [['sine',400,900,0,.12,.4],['sine',500,1000,.25,.12,.4],['sine',450,950,.5,.12,.4],['sine',600,1100,.75,.12,.4]]
 };
 
-// Putar suara hewan: pakai file rekaman kalau ada (mp3/wav/ogg/m4a), kalau tidak pakai suara buatan
+const DURASI_MAKS = 2; // detik, ubah angka ini kalau mau lebih pendek/panjang
+
 function suaraHewan(h, done){
   let selesai = false;
   const fin = () => { if(!selesai){ selesai = true; done(); } };
   const cadangan = () => {
     if(selesai) return;
     const d = mainkan(SINTETIS[h.file] || []);
-    setTimeout(fin, d*1000 + 300);
+    setTimeout(fin, Math.min(d, DURASI_MAKS)*1000 + 300);
   };
   const exts = ['mp3','wav','ogg','m4a'];
   const coba = i => {
@@ -209,8 +210,19 @@ function suaraHewan(h, done){
     if(i >= exts.length){ cadangan(); return; }
     let lanjut = false, mulai = false;
     const berikut = () => { if(!lanjut && !mulai){ lanjut = true; coba(i+1); } };
-       const a = new Audio(h.file + '.' + exts[i]);
-    a.onplaying = () => { mulai = true; };
+    const a = new Audio(h.file + '.' + exts[i]);
+    a.onplaying = () => {
+      if(mulai) return;
+      mulai = true;
+      // fade out pelan mulai 0,5 detik sebelum batas, lalu berhenti
+      setTimeout(() => {
+        const iv = setInterval(() => {
+          if(a.volume > .1){ a.volume = Math.max(0, a.volume - .2); }
+          else { clearInterval(iv); }
+        }, 100);
+      }, Math.max(0, DURASI_MAKS*1000 - 500));
+      setTimeout(() => { a.pause(); fin(); }, DURASI_MAKS*1000);
+    };
     a.onended = fin;
     a.onerror = berikut;
     const p = a.play();
