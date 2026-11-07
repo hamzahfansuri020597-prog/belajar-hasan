@@ -30,6 +30,10 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 .fall{position:fixed;top:-50px;font-size:2.5rem;animation:fall 1.6s linear forwards;pointer-events:none}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
 </style>
+.jgrid{display:grid;gap:8px;max-width:340px;margin:10px auto;padding:0 16px}
+.jc{aspect-ratio:1;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;border:none;background:#fff3b0;box-shadow:0 4px 0 rgba(0,0,0,.18);padding:0}
+.jc.blok{background:#43a047}
+.jc.lalu{background:#ffd54f}
 </head>
 <body>
 
@@ -40,6 +44,7 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
     <button style="background:#43a047" onclick="start('hewan')"><span>🐶</span>Hewan</button>
     <button style="background:#1e88e5" onclick="start('bentuk')"><span>🔷</span>Bentuk</button>
     <button style="background:#fb8c00" onclick="start('angka')"><span>🔢</span>Hitung</button>
+    <button style="background:#8e24aa;grid-column:span 2" onclick="startJalan()"><span>🐰</span>Jalan</button>
   </div>
   <button class="tes" onclick="tesSuara()">🔊 Tes Suara</button>
   <div id="info"></div>
@@ -56,7 +61,16 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
   <div class="choices" id="choices"></div>
 </div>
 
-<script>
+<div id="jalan" class="hidden">
+  <div class="top">
+    <button onclick="home()">🏠</button>
+    <div id="jstars" style="font-size:1.6rem"></div>
+    <button onclick="ulangJalan()">🔊</button>
+  </div>
+  <div id="jq" style="font-size:1.6rem;font-weight:bold;color:#5d4037;margin:6px 12px">Bantu kelinci ke wortel!</div>
+  <div class="jgrid" id="jgrid"></div>
+</div>
+  <script>
 // ====== UBAH NAMA ANAK DI SINI ======
 const NAMA = 'Hasan';
 // ====================================
@@ -244,6 +258,7 @@ function start(m){
 function home(){
   try{ speechSynthesis.cancel(); }catch(e){}
   $('game').classList.add('hidden');
+  $('jalan').classList.add('hidden');
   $('menu').classList.remove('hidden');
 }
 function renderStars(){ $('stars').textContent = '⭐'.repeat(Math.min(score,10)); }
@@ -334,6 +349,109 @@ function confetti(){
     setTimeout(() => s.remove(), 2200);
   }
 }
-</script>
+// ================= GAME JALAN =================
+const JR = 4, JC = 3; // jumlah baris dan kolom (boleh diubah)
+let jgrid = [], jpos = [0,0], jgoal = [0,0], jvisited = {};
+const jkey = (r,c) => r + ',' + c;
+
+function buatJalan(){
+  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  const sc = Math.floor(Math.random()*JC);
+  const gc = Math.floor(Math.random()*JC);
+  const goal = [JR-1, gc];
+  const seen = {}, path = [];
+  function dfs(r,c){
+    seen[jkey(r,c)] = 1; path.push([r,c]);
+    if(r === goal[0] && c === goal[1]) return true;
+    for(const [dr,dc] of shuffle(dirs)){
+      const nr = r+dr, nc = c+dc;
+      if(nr<0 || nc<0 || nr>=JR || nc>=JC || seen[jkey(nr,nc)]) continue;
+      if(dfs(nr,nc)) return true;
+    }
+    path.pop(); return false;
+  }
+  dfs(0, sc);
+  jgrid = Array.from({length:JR}, () => Array(JC).fill(0));
+  path.forEach(([r,c]) => jgrid[r][c] = 1);
+  for(let r=0;r<JR;r++) for(let c=0;c<JC;c++){
+    if(!jgrid[r][c] && Math.random() < .3) jgrid[r][c] = 1;
+  }
+  jpos = [0, sc]; jgoal = goal;
+  jvisited = {}; jvisited[jkey(0,sc)] = 1;
+}
+
+function renderJalan(){
+  const g = $('jgrid');
+  g.style.gridTemplateColumns = `repeat(${JC},1fr)`;
+  g.innerHTML = '';
+  for(let r=0;r<JR;r++) for(let c=0;c<JC;c++){
+    const b = document.createElement('button');
+    let cls = 'jc', isi = '';
+    if(!jgrid[r][c]){ cls += ' blok'; isi = '🌳'; }
+    else if(jvisited[jkey(r,c)]) cls += ' lalu';
+    if(r === jgoal[0] && c === jgoal[1]) isi = '🥕';
+    if(r === jpos[0] && c === jpos[1]) isi = '🐰';
+    b.className = cls; b.textContent = isi;
+    b.onclick = () => tapJalan(b, r, c);
+    g.appendChild(b);
+  }
+}
+
+function renderJStars(){ $('jstars').textContent = '⭐'.repeat(Math.min(score,10)); }
+
+function startJalan(){
+  try{ getAC(); }catch(e){}
+  try{ speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
+  mode = 'jalan'; score = 0; renderJStars();
+  $('menu').classList.add('hidden');
+  $('jalan').classList.remove('hidden');
+  nextJalan();
+}
+
+function nextJalan(){
+  locked = false;
+  buatJalan();
+  renderJalan();
+  setTimeout(ulangJalan, 400);
+}
+
+function ulangJalan(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  setTimeout(() => say('Bantu kelinci cari jalan ke wortel'), 150);
+}
+
+function tapJalan(btn, r, c){
+  if(locked) return;
+  try{ getAC(); }catch(e){}
+  const jarak = Math.abs(r - jpos[0]) + Math.abs(c - jpos[1]);
+  if(jarak !== 1){
+    btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+    return;
+  }
+  if(!jgrid[r][c]){
+    btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
+    tingSalah();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    setTimeout(() => say(`${NAMA} salah. Coba lagi ya ${NAMA}`), 450);
+    return;
+  }
+  jpos = [r, c];
+  jvisited[jkey(r,c)] = 1;
+  renderJalan();
+  if(r === jgoal[0] && c === jgoal[1]){
+    locked = true; score++; renderJStars();
+    confetti(); tingBenar();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    let lanjut = false;
+    const go = () => { if(!lanjut){ lanjut = true; nextJalan(); } };
+    setTimeout(go, 15000);
+    setTimeout(() => {
+      say(`Alhamdulillah, ${NAMA} betul!`);
+      say(`Ayo lanjutkan ${NAMA}!`, go);
+    }, 700);
+  }
+}
+  
+  </script>
 </body>
 </html>
