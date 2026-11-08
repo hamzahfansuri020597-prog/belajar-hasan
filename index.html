@@ -54,6 +54,7 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
     <button style="background:#43a047" onclick="start('hewan')"><span>🐶</span>Hewan</button>
     <button style="background:#1e88e5" onclick="start('bentuk')"><span>🔷</span>Bentuk</button>
     <button style="background:#fb8c00" onclick="start('angka')"><span>🔢</span>Hitung</button>
+    <button style="background:#00acc1;grid-column:span 2" onclick="start('benda')"><span>🏠</span>Benda Sekitar</button>
     <button style="background:#00897b;grid-column:span 2" onclick="start('hijaiyah')"><span>🕌</span>Huruf Hijaiyah</button>
     <button style="background:#8e24aa;grid-column:span 2" onclick="startJalan()"><span>🐰</span>Jalan</button>
     <button style="background:#3949ab;grid-column:span 2" onclick="startSusun()"><span>🧩</span>Susun Langkah</button>
@@ -169,6 +170,25 @@ const DATA = {
     {name:'lingkaran', view:'⭕'},{name:'persegi',   view:'🟦'},
     {name:'segitiga',  view:'🔺'},{name:'bintang',   view:'⭐'},
     {name:'hati',      view:'❤️'}
+  ],
+  // Benda sekitar yang akrab bagi anak (tambah benda baru di sini)
+  benda: [
+    {name:'sendok',       view:'🥄'}, {name:'piring',     view:'🍽️'},
+    {name:'gelas',        view:'🥛'}, {name:'cangkir',    view:'☕'},
+    {name:'kursi',        view:'🪑'}, {name:'pintu',      view:'🚪'},
+    {name:'tempat tidur', view:'🛏️'}, {name:'sepatu',     view:'👟'},
+    {name:'sandal',       view:'🩴'}, {name:'topi',       view:'🧢'},
+    {name:'tas',          view:'🎒'}, {name:'kunci',      view:'🔑'},
+    {name:'jam',          view:'⏰'}, {name:'payung',     view:'☂️'},
+    {name:'sikat gigi',   view:'🪥'}, {name:'sabun',      view:'🧼'},
+    {name:'lampu',        view:'💡'}, {name:'buku',       view:'📖'},
+    {name:'pensil',       view:'✏️'}, {name:'bola',       view:'⚽'},
+    {name:'boneka',       view:'🧸'}, {name:'mobil',      view:'🚗'},
+    {name:'sepeda',       view:'🚲'}, {name:'telepon',    view:'📱'},
+    {name:'televisi',     view:'📺'}, {name:'gunting',    view:'✂️'},
+    {name:'kacamata',     view:'👓'}, {name:'baju',       view:'👕'},
+    {name:'celana',       view:'👖'}, {name:'ember',      view:'🪣'},
+    {name:'sapu',         view:'🧹'}
   ],
   angka: [1,2,3,4,5].map(n => ({name:String(n), view:String(n)})),
   hijaiyah: HIJAIYAH.slice(0, JUMLAH_HURUF)
@@ -323,6 +343,7 @@ function questionText(){
   if(mode==='angka') return 'Ada berapa apel?';
   if(mode==='warna') return `Mana yang warna ${target.name}?`;
   if(mode==='hijaiyah') return `Mana huruf ${target.name}?`;
+  if(mode==='benda') return `Mana gambar ${target.name}?`;
   if(mode==='hewan'){
     return tanyaSuara ? 'Siapa yang bersuara...'
                       : `Mana gambar ${target.name}?`;
@@ -381,6 +402,7 @@ function jawab(btn, o){
 
     const ucapan = () => {
       if(mode === 'hijaiyah') say(`Ini huruf ${o.name}`);
+      if(mode === 'benda') say(`Ini ${o.name}`);
       say(`Alhamdulillah, ${NAMA} betul!`);
       say(`Ayo lanjutkan ${NAMA}!`, go);
     };
