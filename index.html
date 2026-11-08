@@ -34,6 +34,15 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 .jc{aspect-ratio:1;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;border:none;background:#fff3b0;box-shadow:0 4px 0 rgba(0,0,0,.18);padding:0}
 .jc.blok{background:#43a047}
 .jc.lalu{background:#ffd54f}
+.sseq{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;min-height:64px;margin:8px 16px;padding:6px;font-size:2.2rem;background:#fff;border-radius:20px;border:3px dashed #bdbdbd}
+.sbtns{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px 16px}
+.sb{width:70px;height:70px;font-size:2.2rem;border:none;border-radius:20px;background:#fff;box-shadow:0 5px 0 rgba(0,0,0,.18);padding:0}
+.sb:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.sb.go{background:#43a047;width:100px}
+.sb.del{background:#ffcdd2}
+.kartu{aspect-ratio:1;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:3rem;border:none;background:#5c6bc0;color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.2);padding:0}
+.kartu.buka{background:#fff;color:#000}
+.kartu.cocok{background:#c8e6c9;color:#000}
 </style>
 </head>
 <body>
@@ -47,6 +56,8 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
     <button style="background:#fb8c00" onclick="start('angka')"><span>🔢</span>Hitung</button>
     <button style="background:#00897b;grid-column:span 2" onclick="start('hijaiyah')"><span>🕌</span>Huruf Hijaiyah</button>
     <button style="background:#8e24aa;grid-column:span 2" onclick="startJalan()"><span>🐰</span>Jalan</button>
+    <button style="background:#3949ab;grid-column:span 2" onclick="startSusun()"><span>🧩</span>Susun Langkah</button>
+    <button style="background:#d81b60;grid-column:span 2" onclick="startPasang()"><span>🃏</span>Cocokkan Pasangan</button>
   </div>
   <button class="tes" onclick="tesSuara()">🔊 Tes Suara</button>
   <div id="info"></div>
@@ -71,6 +82,36 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
   </div>
   <div id="jq" style="font-size:1.6rem;font-weight:bold;color:#5d4037;margin:6px 12px">Bantu kelinci ke wortel!</div>
   <div class="jgrid" id="jgrid"></div>
+</div>
+
+<div id="susun" class="hidden">
+  <div class="top">
+    <button onclick="home()">🏠</button>
+    <div id="sstars" style="font-size:1.6rem"></div>
+    <button onclick="ulangSusun()">🔊</button>
+  </div>
+  <div class="jgrid" id="sgrid"></div>
+  <div class="sseq" id="sseq"></div>
+  <div class="sbtns">
+    <button class="sb" onclick="tambahLangkah('atas')">⬆️</button>
+    <button class="sb" onclick="tambahLangkah('bawah')">⬇️</button>
+    <button class="sb" onclick="tambahLangkah('kiri')">⬅️</button>
+    <button class="sb" onclick="tambahLangkah('kanan')">➡️</button>
+  </div>
+  <div class="sbtns">
+    <button class="sb go" onclick="jalankanSusun()">▶️</button>
+    <button class="sb del" onclick="hapusLangkah()">🗑️</button>
+  </div>
+</div>
+
+<div id="pasang" class="hidden">
+  <div class="top">
+    <button onclick="home()">🏠</button>
+    <div id="pstars" style="font-size:1.6rem"></div>
+    <button onclick="ulangPasang()">🔊</button>
+  </div>
+  <div id="pq" style="font-size:1.6rem;font-weight:bold;color:#5d4037;margin:6px 12px">Cari gambar yang sama!</div>
+  <div class="jgrid" id="pgrid"></div>
 </div>
 
 <script>
@@ -189,6 +230,7 @@ function mainkan(notes){
 }
 const tingBenar = () => mainkan([['sine',660,660,0,.15,.3],['sine',880,880,.15,.15,.3],['sine',1100,1100,.3,.25,.3]]);
 const tingSalah = () => mainkan([['triangle',220,200,0,.22,.3],['triangle',160,140,.22,.3,.3]]);
+const tingKlik  = () => mainkan([['sine',700,700,0,.08,.2]]);
 
 const SINTETIS = {
   anjing:  [['sawtooth',350,150,0,.18,.4],['sawtooth',350,150,.35,.18,.4],['sawtooth',350,150,.7,.18,.4]],
@@ -267,8 +309,12 @@ function start(m){
 }
 function home(){
   try{ speechSynthesis.cancel(); }catch(e){}
+  srun = false;
+  paktif = false;
   $('game').classList.add('hidden');
   $('jalan').classList.add('hidden');
+  $('susun').classList.add('hidden');
+  $('pasang').classList.add('hidden');
   $('menu').classList.remove('hidden');
 }
 function renderStars(){ $('stars').textContent = '⭐'.repeat(Math.min(score,10)); }
@@ -467,6 +513,227 @@ function tapJalan(btn, r, c){
       say(`Alhamdulillah, ${NAMA} betul!`);
       say(`Ayo lanjutkan ${NAMA}!`, go);
     }, 700);
+  }
+}
+
+// ================= GAME SUSUN LANGKAH =================
+const SR = 3, SC = 3;          // ukuran papan (baris x kolom)
+const SJARAK = [2, 3];         // jarak kelinci ke wortel (jumlah langkah minimal)
+const SMAKS = 6;               // maksimal panah yang boleh disusun
+const PANAH = {atas:'⬆️', bawah:'⬇️', kiri:'⬅️', kanan:'➡️'};
+const ARAH  = {atas:[-1,0], bawah:[1,0], kiri:[0,-1], kanan:[0,1]};
+let sstart = [0,0], sgoal = [0,0], spos = [0,0], sseq = [], srun = false;
+
+function buatSusun(){
+  const jarakTarget = acak(SJARAK);
+  let s, g, tries = 0;
+  do {
+    s = [Math.floor(Math.random()*SR), Math.floor(Math.random()*SC)];
+    g = [Math.floor(Math.random()*SR), Math.floor(Math.random()*SC)];
+    tries++;
+  } while(Math.abs(s[0]-g[0]) + Math.abs(s[1]-g[1]) !== jarakTarget && tries < 200);
+  sstart = s; sgoal = g; spos = [s[0], s[1]]; sseq = []; srun = false;
+}
+
+function renderSusun(){
+  const g = $('sgrid');
+  g.style.gridTemplateColumns = `repeat(${SC},1fr)`;
+  g.innerHTML = '';
+  for(let r=0;r<SR;r++) for(let c=0;c<SC;c++){
+    const b = document.createElement('button');
+    let isi = '';
+    if(r === sgoal[0] && c === sgoal[1]) isi = '🥕';
+    if(r === spos[0] && c === spos[1]) isi = '🐰';
+    b.className = 'jc'; b.textContent = isi; b.disabled = true;
+    g.appendChild(b);
+  }
+  renderSeq();
+}
+function renderSeq(){
+  $('sseq').textContent = sseq.map(d => PANAH[d]).join(' ');
+}
+function renderSStars(){ $('sstars').textContent = '⭐'.repeat(Math.min(score,10)); }
+
+function startSusun(){
+  try{ getAC(); }catch(e){}
+  try{ speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
+  mode = 'susun'; score = 0; renderSStars();
+  $('menu').classList.add('hidden');
+  $('susun').classList.remove('hidden');
+  nextSusun();
+}
+function nextSusun(){
+  locked = false;
+  buatSusun();
+  renderSusun();
+  setTimeout(ulangSusun, 400);
+}
+function ulangSusun(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  setTimeout(() => say('Susun panah supaya kelinci sampai ke wortel. Lalu tekan tombol hijau'), 150);
+}
+
+function tambahLangkah(d){
+  if(srun || locked) return;
+  try{ getAC(); }catch(e){}
+  if(sseq.length >= SMAKS){ tingSalah(); return; }
+  sseq.push(d);
+  tingKlik();
+  renderSeq();
+}
+function hapusLangkah(){
+  if(srun || locked) return;
+  sseq = [];
+  renderSeq();
+}
+
+function jalankanSusun(){
+  if(srun || locked) return;
+  try{ getAC(); }catch(e){}
+  if(!sseq.length){ tingSalah(); return; }
+  srun = true;
+  spos = [sstart[0], sstart[1]];
+  renderSusun();
+  let i = 0;
+  const langkah = () => {
+    if(!srun) return; // dibatalkan (tombol rumah)
+    if(i >= sseq.length){ selesaiSusun(); return; }
+    const d = ARAH[sseq[i]];
+    const nr = spos[0] + d[0], nc = spos[1] + d[1];
+    if(nr >= 0 && nc >= 0 && nr < SR && nc < SC){ spos = [nr, nc]; }
+    tingKlik();
+    renderSusun();
+    i++;
+    setTimeout(langkah, 650);
+  };
+  setTimeout(langkah, 400);
+}
+
+function selesaiSusun(){
+  srun = false;
+  if(spos[0] === sgoal[0] && spos[1] === sgoal[1]){
+    locked = true; score++; renderSStars();
+    confetti(); tingBenar();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    let lanjut = false;
+    const go = () => { if(!lanjut){ lanjut = true; nextSusun(); } };
+    setTimeout(go, 15000); // cadangan
+    setTimeout(() => {
+      say(`Alhamdulillah, ${NAMA} betul!`);
+      say(`Ayo lanjutkan ${NAMA}!`, go);
+    }, 700);
+  } else {
+    tingSalah();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    setTimeout(() => say(`${NAMA} salah. Coba lagi ya ${NAMA}`), 450);
+    setTimeout(() => {
+      spos = [sstart[0], sstart[1]];
+      sseq = [];
+      renderSusun();
+    }, 1500);
+  }
+}
+
+// ================= GAME COCOKKAN PASANGAN =================
+const PASANG_JUMLAH = 3;   // jumlah pasangan (3 = 6 kartu). Untuk lebih sulit: 4 (8 kartu)
+const PASANG_KOLOM = 3;    // jumlah kolom kartu
+let pkartu = [], pbuka = [], pcocok = 0, plock = false, paktif = false;
+
+function buatPasang(){
+  const pilih = shuffle(DATA.hewan).slice(0, PASANG_JUMLAH);
+  pkartu = shuffle([...pilih, ...pilih]).map(h => ({h: h, buka: false, selesai: false}));
+  pbuka = []; pcocok = 0; plock = false;
+}
+
+function renderPasang(){
+  const g = $('pgrid');
+  g.style.gridTemplateColumns = `repeat(${PASANG_KOLOM},1fr)`;
+  g.innerHTML = '';
+  pkartu.forEach((k, i) => {
+    const b = document.createElement('button');
+    let cls = 'kartu';
+    if(k.selesai) cls += ' cocok'; else if(k.buka) cls += ' buka';
+    b.className = cls;
+    b.textContent = (k.buka || k.selesai) ? k.h.view : '❓';
+    b.onclick = () => tapKartu(i);
+    g.appendChild(b);
+  });
+}
+function renderPStars(){ $('pstars').textContent = '⭐'.repeat(Math.min(score,10)); }
+
+function startPasang(){
+  try{ getAC(); }catch(e){}
+  try{ speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
+  mode = 'pasang'; score = 0; paktif = true; renderPStars();
+  $('menu').classList.add('hidden');
+  $('pasang').classList.remove('hidden');
+  nextPasang();
+}
+function nextPasang(){
+  if(!paktif) return;
+  buatPasang();
+  renderPasang();
+  setTimeout(ulangPasang, 400);
+}
+function ulangPasang(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  setTimeout(() => say('Cari dua gambar yang sama'), 150);
+}
+
+function tapKartu(i){
+  if(plock || !paktif) return;
+  const k = pkartu[i];
+  if(k.buka || k.selesai) return;
+  try{ getAC(); }catch(e){}
+  k.buka = true;
+  pbuka.push(i);
+  tingKlik();
+  renderPasang();
+  speak(k.h.name);
+
+  if(pbuka.length === 2){
+    plock = true;
+    const a = pkartu[pbuka[0]], b = pkartu[pbuka[1]];
+    if(a.h.name === b.h.name){
+      // SAMA
+      setTimeout(() => {
+        if(!paktif) return;
+        a.selesai = true; b.selesai = true; a.buka = false; b.buka = false;
+        pbuka = []; pcocok++;
+        renderPasang();
+        if(pcocok >= PASANG_JUMLAH){
+          score++; renderPStars();
+          confetti(); tingBenar();
+          try{ speechSynthesis.cancel(); }catch(e){}
+          let lanjut = false;
+          const go = () => { if(!lanjut){ lanjut = true; nextPasang(); } };
+          setTimeout(go, 15000); // cadangan
+          setTimeout(() => {
+            if(!paktif) return;
+            say(`Alhamdulillah, ${NAMA} betul!`);
+            say(`Ayo lanjutkan ${NAMA}!`, go);
+          }, 700);
+        } else {
+          tingBenar();
+          setTimeout(() => { if(paktif) say('Sama!'); }, 400);
+          plock = false;
+        }
+      }, 900);
+    } else {
+      // BEDA
+      setTimeout(() => {
+        if(!paktif) return;
+        tingSalah();
+        try{ speechSynthesis.cancel(); }catch(e){}
+        setTimeout(() => { if(paktif) say(`Belum sama. Coba lagi ya ${NAMA}`); }, 400);
+      }, 900);
+      setTimeout(() => {
+        if(!paktif) return;
+        a.buka = false; b.buka = false;
+        pbuka = []; plock = false;
+        renderPasang();
+      }, 2300);
+    }
   }
 }
 </script>
