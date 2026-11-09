@@ -191,7 +191,8 @@ const DATA = {
     {name:'sapu',         view:'🧹'}
   ],
   angka: [1,2,3,4,5].map(n => ({name:String(n), view:String(n)})),
-  hijaiyah: HIJAIYAH.slice(0, JUMLAH_HURUF)
+  // setiap huruf diberi nama file rekaman: huruf1 (alif) sampai huruf28 (ya)
+  hijaiyah: HIJAIYAH.slice(0, JUMLAH_HURUF).map((h,i) => ({name:h.name, view:h.view, file:'huruf'+(i+1)}))
 };
 
 let mode, target, score = 0, locked = false, tanyaSuara = false;
@@ -312,6 +313,30 @@ function suaraHewan(h, done){
   setTimeout(fin, 15000);
 }
 
+// ================= SUARA HURUF HIJAIYAH (rekaman sendiri) =================
+// Memutar huruf1.mp3 ... huruf28.mp3. Kalau file tidak ada, memakai suara sistem.
+function suaraHuruf(h, done){
+  let selesai = false;
+  const fin = () => { if(!selesai){ selesai = true; if(done) done(); } };
+  const cadangan = () => { if(!selesai) say(h.name, fin); };
+  const exts = ['mp3','m4a','wav','ogg'];
+  const coba = i => {
+    if(selesai) return;
+    if(i >= exts.length){ cadangan(); return; }
+    let lanjut = false, mulai = false;
+    const berikut = () => { if(!lanjut && !mulai){ lanjut = true; coba(i+1); } };
+    const a = new Audio(h.file + '.' + exts[i]);
+    a.onplaying = () => { mulai = true; };
+    a.onended = fin;
+    a.onerror = berikut;
+    const p = a.play();
+    if(p && p.catch) p.catch(berikut);
+    setTimeout(() => { if(!mulai){ a.pause(); berikut(); } }, 5000);
+  };
+  coba(0);
+  setTimeout(fin, 12000);
+}
+
 // ================= ALUR GAME =================
 function tesSuara(){
   try{ getAC(); }catch(e){}
@@ -357,6 +382,11 @@ function ulang(){
     say('Siapa yang bersuara', () => {
       setTimeout(() => suaraHewan(target, () => {}), 200);
     });
+  } else if(mode==='hijaiyah'){
+    // 1) sistem: "Mana huruf"  2) rekaman huruf
+    say('Mana huruf', () => {
+      setTimeout(() => suaraHuruf(target), 200);
+    });
   } else {
     say(questionText());
   }
@@ -401,7 +431,6 @@ function jawab(btn, o){
     setTimeout(go, 20000); // cadangan
 
     const ucapan = () => {
-      if(mode === 'hijaiyah') say(`Ini huruf ${o.name}`);
       if(mode === 'benda') say(`Ini ${o.name}`);
       say(`Alhamdulillah, ${NAMA} betul!`);
       say(`Ayo lanjutkan ${NAMA}!`, go);
@@ -409,6 +438,10 @@ function jawab(btn, o){
 
     if(mode === 'hewan'){
       suaraHewan(o, () => setTimeout(ucapan, 300));
+    } else if(mode === 'hijaiyah'){
+      // rekaman huruf diputar lagi, lalu "Alhamdulillah, Hasan betul!"
+      tingBenar();
+      setTimeout(() => suaraHuruf(o, () => setTimeout(ucapan, 300)), 500);
     } else {
       tingBenar();
       setTimeout(ucapan, 700);
