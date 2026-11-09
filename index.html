@@ -23,6 +23,7 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 .choice{width:28vw;max-width:150px;height:28vw;max-height:150px;background:#fff;border:none;border-radius:28px;font-size:4.5rem;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 0 rgba(0,0,0,.18)}
 .choice:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
 .ar{font-family:'Noto Naskh Arabic','Traditional Arabic','Geeza Pro',serif;color:#1b5e20}
+.abc{font-weight:bold;color:#5e35b1}
 .dot{width:70%;height:70%;border-radius:50%}
 .shake{animation:shake .4s}
 @keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
@@ -55,6 +56,9 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
     <button style="background:#1e88e5" onclick="start('bentuk')"><span>🔷</span>Bentuk</button>
     <button style="background:#fb8c00" onclick="start('angka')"><span>🔢</span>Hitung</button>
     <button style="background:#00acc1;grid-column:span 2" onclick="start('benda')"><span>🏠</span>Benda Sekitar</button>
+    <button style="background:#5e35b1" onclick="start('alfabet')"><span>🔤</span>Huruf ABC</button>
+    <button style="background:#e65100" onclick="start('buah')"><span>🍎</span>Buah & Sayur</button>
+    <button style="background:#6d4c41;grid-column:span 2" onclick="start('tubuh')"><span>👁️</span>Anggota Tubuh</button>
     <button style="background:#00897b;grid-column:span 2" onclick="start('hijaiyah')"><span>🕌</span>Huruf Hijaiyah</button>
     <button style="background:#8e24aa;grid-column:span 2" onclick="startJalan()"><span>🐰</span>Jalan</button>
     <button style="background:#3949ab;grid-column:span 2" onclick="startSusun()"><span>🧩</span>Susun Langkah</button>
@@ -189,6 +193,27 @@ const DATA = {
     {name:'kacamata',     view:'👓'}, {name:'baju',       view:'👕'},
     {name:'celana',       view:'👖'}, {name:'ember',      view:'🪣'},
     {name:'sapu',         view:'🧹'}
+  ],
+  // Huruf ABC: tampil besar dan kecil sekaligus, misalnya "Bb"
+  alfabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(h => ({name:h, view:h + h.toLowerCase()})),
+  // Buah dan sayur (tambah baru di sini)
+  buah: [
+    {name:'apel',      view:'🍎'}, {name:'pisang',   view:'🍌'},
+    {name:'jeruk',     view:'🍊'}, {name:'anggur',   view:'🍇'},
+    {name:'semangka',  view:'🍉'}, {name:'stroberi', view:'🍓'},
+    {name:'nanas',     view:'🍍'}, {name:'mangga',   view:'🥭'},
+    {name:'pir',       view:'🍐'}, {name:'kelapa',   view:'🥥'},
+    {name:'wortel',    view:'🥕'}, {name:'brokoli',  view:'🥦'},
+    {name:'jagung',    view:'🌽'}, {name:'tomat',    view:'🍅'},
+    {name:'kentang',   view:'🥔'}, {name:'timun',    view:'🥒'}
+  ],
+  // Anggota tubuh (tambah baru di sini)
+  tubuh: [
+    {name:'mata',    view:'👁️'}, {name:'hidung', view:'👃'},
+    {name:'telinga', view:'👂'}, {name:'mulut',  view:'👄'},
+    {name:'tangan',  view:'✋'}, {name:'kaki',   view:'🦶'},
+    {name:'gigi',    view:'🦷'}, {name:'lidah',  view:'👅'},
+    {name:'otak',    view:'🧠'}
   ],
   angka: [1,2,3,4,5].map(n => ({name:String(n), view:String(n)})),
   // setiap huruf diberi nama file rekaman: huruf1 (alif) sampai huruf28 (ya)
@@ -369,6 +394,9 @@ function questionText(){
   if(mode==='warna') return `Mana yang warna ${target.name}?`;
   if(mode==='hijaiyah') return `Mana huruf ${target.name}?`;
   if(mode==='benda') return `Mana gambar ${target.name}?`;
+  if(mode==='alfabet') return `Mana huruf ${target.name}?`;
+  if(mode==='buah') return `Mana gambar ${target.name}?`;
+  if(mode==='tubuh') return `Mana ${target.name}?`;
   if(mode==='hewan'){
     return tanyaSuara ? 'Siapa yang bersuara...'
                       : `Mana gambar ${target.name}?`;
@@ -408,7 +436,7 @@ function next(){
   $('choices').innerHTML = '';
   opts.forEach(o => {
     const b = document.createElement('button');
-    b.className = 'choice' + (mode==='hijaiyah' ? ' ar' : '');
+    b.className = 'choice' + (mode==='hijaiyah' ? ' ar' : '') + (mode==='alfabet' ? ' abc' : '');
     b.innerHTML = o.view;
     b.onclick = () => jawab(b, o);
     $('choices').appendChild(b);
@@ -431,7 +459,8 @@ function jawab(btn, o){
     setTimeout(go, 20000); // cadangan
 
     const ucapan = () => {
-      if(mode === 'benda') say(`Ini ${o.name}`);
+      if(mode === 'benda' || mode === 'buah' || mode === 'tubuh') say(`Ini ${o.name}`);
+      if(mode === 'alfabet') say(`Ini huruf ${o.name}`);
       say(`Alhamdulillah, ${NAMA} betul!`);
       say(`Ayo lanjutkan ${NAMA}!`, go);
     };
