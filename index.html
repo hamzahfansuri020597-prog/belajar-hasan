@@ -14,6 +14,13 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 .menu button span{display:block;font-size:3.5rem}
 .tes{font-size:1.3rem;border:none;background:#fff;border-radius:16px;padding:12px 24px;box-shadow:0 3px 0 rgba(0,0,0,.15);margin:6px}
 #info{font-size:.9rem;color:#795548;margin:8px 16px}
+#namaBox{max-width:500px;margin:0 auto 6px;padding:0 16px}
+.nm-judul{font-weight:bold;color:#5d4037;margin:4px 0}
+#namaList{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.nm{font-size:1.3rem;font-weight:bold;border:3px solid transparent;background:#fff;color:#5d4037;border-radius:18px;padding:8px 18px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.nm.aktif{background:#ffb74d;border-color:#ef6c00;color:#fff}
+.nm-aksi{display:flex;justify-content:center;gap:8px;margin-top:8px}
+.nm-b{font-size:1rem;border:none;background:#fff;border-radius:14px;padding:8px 14px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
 .top{display:flex;justify-content:space-between;align-items:center;padding:10px 16px}
 .top button{font-size:1.5rem;border:none;background:#fff;border-radius:16px;padding:8px 16px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
 #stars{font-size:1.6rem}
@@ -23,7 +30,6 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 .choice{width:28vw;max-width:150px;height:28vw;max-height:150px;background:#fff;border:none;border-radius:28px;font-size:4.5rem;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 0 rgba(0,0,0,.18)}
 .choice:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
 .ar{font-family:'Noto Naskh Arabic','Traditional Arabic','Geeza Pro',serif;color:#1b5e20}
-.abc{font-weight:bold;color:#5e35b1}
 .dot{width:70%;height:70%;border-radius:50%}
 .shake{animation:shake .4s}
 @keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
@@ -50,15 +56,20 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 
 <div id="menu">
   <h1>Belajar Yuk! 🌈</h1>
+  <div id="namaBox">
+    <div class="nm-judul">Siapa yang main?</div>
+    <div id="namaList"></div>
+    <div class="nm-aksi">
+      <button class="nm-b" onclick="tambahNama()">➕ Tambah Nama</button>
+      <button class="nm-b" onclick="hapusNama()">🗑️ Hapus Nama</button>
+    </div>
+  </div>
   <div class="menu">
     <button style="background:#e53935" onclick="start('warna')"><span>🎨</span>Warna</button>
     <button style="background:#43a047" onclick="start('hewan')"><span>🐶</span>Hewan</button>
     <button style="background:#1e88e5" onclick="start('bentuk')"><span>🔷</span>Bentuk</button>
     <button style="background:#fb8c00" onclick="start('angka')"><span>🔢</span>Hitung</button>
     <button style="background:#00acc1;grid-column:span 2" onclick="start('benda')"><span>🏠</span>Benda Sekitar</button>
-    <button style="background:#5e35b1" onclick="start('alfabet')"><span>🔤</span>Huruf ABC</button>
-    <button style="background:#e65100" onclick="start('buah')"><span>🍎</span>Buah & Sayur</button>
-    <button style="background:#6d4c41;grid-column:span 2" onclick="start('tubuh')"><span>👁️</span>Anggota Tubuh</button>
     <button style="background:#00897b;grid-column:span 2" onclick="start('hijaiyah')"><span>🕌</span>Huruf Hijaiyah</button>
     <button style="background:#8e24aa;grid-column:span 2" onclick="startJalan()"><span>🐰</span>Jalan</button>
     <button style="background:#3949ab;grid-column:span 2" onclick="startSusun()"><span>🧩</span>Susun Langkah</button>
@@ -120,9 +131,12 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 </div>
 
 <script>
-// ====== UBAH NAMA ANAK DI SINI ======
-const NAMA = 'Hasan';
-// ====================================
+// ====== NAMA ANAK ======
+// Nama yang dipilih di menu. Daftar nama dikelola lewat tombol di menu (tersimpan di perangkat).
+let NAMA = 'Hasan';
+const NAMA_AWAL = ['Hasan'];   // daftar nama bawaan (kalau belum ada yang tersimpan)
+const MAKS_NAMA = 10;          // jumlah nama maksimal
+// ========================
 
 // Jumlah huruf hijaiyah yang dipakai (1-28). Untuk mulai dari yang mudah, ubah ke 10.
 const JUMLAH_HURUF = 28;
@@ -194,27 +208,6 @@ const DATA = {
     {name:'celana',       view:'👖'}, {name:'ember',      view:'🪣'},
     {name:'sapu',         view:'🧹'}
   ],
-  // Huruf ABC: tampil besar dan kecil sekaligus, misalnya "Bb"
-  alfabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(h => ({name:h, view:h + h.toLowerCase()})),
-  // Buah dan sayur (tambah baru di sini)
-  buah: [
-    {name:'apel',      view:'🍎'}, {name:'pisang',   view:'🍌'},
-    {name:'jeruk',     view:'🍊'}, {name:'anggur',   view:'🍇'},
-    {name:'semangka',  view:'🍉'}, {name:'stroberi', view:'🍓'},
-    {name:'nanas',     view:'🍍'}, {name:'mangga',   view:'🥭'},
-    {name:'pir',       view:'🍐'}, {name:'kelapa',   view:'🥥'},
-    {name:'wortel',    view:'🥕'}, {name:'brokoli',  view:'🥦'},
-    {name:'jagung',    view:'🌽'}, {name:'tomat',    view:'🍅'},
-    {name:'kentang',   view:'🥔'}, {name:'timun',    view:'🥒'}
-  ],
-  // Anggota tubuh (tambah baru di sini)
-  tubuh: [
-    {name:'mata',    view:'👁️'}, {name:'hidung', view:'👃'},
-    {name:'telinga', view:'👂'}, {name:'mulut',  view:'👄'},
-    {name:'tangan',  view:'✋'}, {name:'kaki',   view:'🦶'},
-    {name:'gigi',    view:'🦷'}, {name:'lidah',  view:'👅'},
-    {name:'otak',    view:'🧠'}
-  ],
   angka: [1,2,3,4,5].map(n => ({name:String(n), view:String(n)})),
   // setiap huruf diberi nama file rekaman: huruf1 (alif) sampai huruf28 (ya)
   hijaiyah: HIJAIYAH.slice(0, JUMLAH_HURUF).map((h,i) => ({name:h.name, view:h.view, file:'huruf'+(i+1)}))
@@ -244,6 +237,74 @@ function say(t, onend){
 function speak(t){
   try{ speechSynthesis.cancel(); }catch(e){}
   setTimeout(() => say(t), 150);
+}
+
+// ================= DAFTAR NAMA ANAK =================
+const KUNCI_LIST = 'belajar_daftar_nama';
+const KUNCI_PILIH = 'belajar_nama_aktif';
+let DAFTAR_NAMA = [...NAMA_AWAL];
+
+function muatNama(){
+  try{
+    const l = JSON.parse(localStorage.getItem(KUNCI_LIST) || 'null');
+    if(Array.isArray(l) && l.length) DAFTAR_NAMA = l.filter(x => typeof x === 'string' && x);
+    if(!DAFTAR_NAMA.length) DAFTAR_NAMA = [...NAMA_AWAL];
+    const p = localStorage.getItem(KUNCI_PILIH);
+    NAMA = (p && DAFTAR_NAMA.indexOf(p) > -1) ? p : DAFTAR_NAMA[0];
+  }catch(e){
+    NAMA = DAFTAR_NAMA[0];
+  }
+}
+function simpanNama(){
+  try{
+    localStorage.setItem(KUNCI_LIST, JSON.stringify(DAFTAR_NAMA));
+    localStorage.setItem(KUNCI_PILIH, NAMA);
+  }catch(e){}
+}
+function renderNama(){
+  const box = $('namaList');
+  box.innerHTML = '';
+  DAFTAR_NAMA.forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'nm' + (n === NAMA ? ' aktif' : '');
+    b.textContent = n;
+    b.onclick = () => pilihNama(n);
+    box.appendChild(b);
+  });
+}
+function pilihNama(n){
+  NAMA = n;
+  simpanNama();
+  renderNama();
+  try{ getAC(); }catch(e){}
+  try{ speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
+  speak(`Halo ${n}! Ayo belajar`);
+}
+function tambahNama(){
+  if(DAFTAR_NAMA.length >= MAKS_NAMA){
+    alert('Daftar nama sudah penuh (maksimal ' + MAKS_NAMA + '). Hapus salah satu dulu.');
+    return;
+  }
+  let n = prompt('Tulis nama anak:');
+  if(!n) return;
+  n = n.trim().replace(/\s+/g,' ').slice(0,20);
+  if(!n) return;
+  n = n.charAt(0).toUpperCase() + n.slice(1);
+  const sudah = DAFTAR_NAMA.some(x => x.toLowerCase() === n.toLowerCase());
+  if(sudah){ alert('Nama ' + n + ' sudah ada.'); return; }
+  DAFTAR_NAMA.push(n);
+  pilihNama(n);
+}
+function hapusNama(){
+  if(DAFTAR_NAMA.length <= 1){
+    alert('Minimal harus ada satu nama.');
+    return;
+  }
+  if(!confirm('Hapus nama ' + NAMA + '?')) return;
+  DAFTAR_NAMA = DAFTAR_NAMA.filter(x => x !== NAMA);
+  NAMA = DAFTAR_NAMA[0];
+  simpanNama();
+  renderNama();
 }
 
 // ================= NADA & SUARA BUATAN =================
@@ -394,9 +455,6 @@ function questionText(){
   if(mode==='warna') return `Mana yang warna ${target.name}?`;
   if(mode==='hijaiyah') return `Mana huruf ${target.name}?`;
   if(mode==='benda') return `Mana gambar ${target.name}?`;
-  if(mode==='alfabet') return `Mana huruf ${target.name}?`;
-  if(mode==='buah') return `Mana gambar ${target.name}?`;
-  if(mode==='tubuh') return `Mana ${target.name}?`;
   if(mode==='hewan'){
     return tanyaSuara ? 'Siapa yang bersuara...'
                       : `Mana gambar ${target.name}?`;
@@ -436,12 +494,17 @@ function next(){
   $('choices').innerHTML = '';
   opts.forEach(o => {
     const b = document.createElement('button');
-    b.className = 'choice' + (mode==='hijaiyah' ? ' ar' : '') + (mode==='alfabet' ? ' abc' : '');
+    b.className = 'choice' + (mode==='hijaiyah' ? ' ar' : '');
     b.innerHTML = o.view;
     b.onclick = () => jawab(b, o);
     $('choices').appendChild(b);
   });
   setTimeout(ulang, 400);
+}
+
+// nama yang diucapkan untuk sebuah pilihan (huruf hijaiyah diberi awalan "huruf")
+function sebutPilihan(o){
+  return (mode === 'hijaiyah' ? 'huruf ' : '') + o.name;
 }
 
 function jawab(btn, o){
@@ -456,11 +519,11 @@ function jawab(btn, o){
 
     let lanjut = false;
     const go = () => { if(!lanjut){ lanjut = true; next(); } };
-    setTimeout(go, 20000); // cadangan
+    setTimeout(go, 25000); // cadangan
 
+    // "Ya betul, itu harimau" -> "Alhamdulillah, Hasan betul!" -> "Ayo lanjutkan Hasan!"
     const ucapan = () => {
-      if(mode === 'benda' || mode === 'buah' || mode === 'tubuh') say(`Ini ${o.name}`);
-      if(mode === 'alfabet') say(`Ini huruf ${o.name}`);
+      say(`Ya betul, itu ${sebutPilihan(o)}`);
       say(`Alhamdulillah, ${NAMA} betul!`);
       say(`Ayo lanjutkan ${NAMA}!`, go);
     };
@@ -468,7 +531,7 @@ function jawab(btn, o){
     if(mode === 'hewan'){
       suaraHewan(o, () => setTimeout(ucapan, 300));
     } else if(mode === 'hijaiyah'){
-      // rekaman huruf diputar lagi, lalu "Alhamdulillah, Hasan betul!"
+      // rekaman huruf diputar lagi, lalu ucapan sistem
       tingBenar();
       setTimeout(() => suaraHuruf(o, () => setTimeout(ucapan, 300)), 500);
     } else {
@@ -479,7 +542,8 @@ function jawab(btn, o){
     btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
     tingSalah();
     try{ speechSynthesis.cancel(); }catch(e){}
-    setTimeout(() => say(`${NAMA} salah. Coba lagi ya ${NAMA}`), 450);
+    // "Sayang sekali, Hasan salah. Yang Hasan pilih itu babi. Coba lagi ya Hasan"
+    setTimeout(() => say(`Sayang sekali, ${NAMA} salah. Yang ${NAMA} pilih itu ${sebutPilihan(o)}. Coba lagi ya ${NAMA}`), 450);
   }
 }
 
@@ -820,6 +884,10 @@ function tapKartu(i){
     }
   }
 }
+
+// ================= MULAI =================
+muatNama();
+renderNama();
 </script>
 </body>
 </html>
