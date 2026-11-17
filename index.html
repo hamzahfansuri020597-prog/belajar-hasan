@@ -870,3 +870,92 @@ function renderPasang(){
     let cls = 'kartu';
     if(k.selesai) cls += ' cocok'; else if(k.buka) cls += ' buka';
     b.className = cls;
+        b.textContent = (k.buka || k.selesai) ? k.h.view : '❓';
+    b.onclick = () => tapKartu(i);
+    g.appendChild(b);
+  });
+}
+function renderPStars(){ $('pstars').textContent = '⭐'.repeat(Math.min(score,10)); }
+
+function startPasang(){
+  try{ getAC(); }catch(e){}
+  try{ speechSynthesis.speak(new SpeechSynthesisUtterance('')); }catch(e){}
+  mode = 'pasang'; score = 0; paktif = true; renderPStars();
+  $('menu').classList.add('hidden');
+  $('pasang').classList.remove('hidden');
+  nextPasang();
+}
+function nextPasang(){
+  if(!paktif) return;
+  buatPasang();
+  renderPasang();
+  setTimeout(ulangPasang, 400);
+}
+function ulangPasang(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  setTimeout(() => say('Cari dua gambar yang sama'), 150);
+}
+
+function tapKartu(i){
+  if(plock || !paktif) return;
+  const k = pkartu[i];
+  if(k.buka || k.selesai) return;
+  try{ getAC(); }catch(e){}
+  k.buka = true;
+  pbuka.push(i);
+  tingKlik();
+  renderPasang();
+  speak(k.h.name);
+
+  if(pbuka.length === 2){
+    plock = true;
+    const a = pkartu[pbuka[0]], b = pkartu[pbuka[1]];
+    if(a.h.name === b.h.name){
+      // SAMA
+      setTimeout(() => {
+        if(!paktif) return;
+        a.selesai = true; b.selesai = true; a.buka = false; b.buka = false;
+        pbuka = []; pcocok++;
+        renderPasang();
+        if(pcocok >= PASANG_JUMLAH){
+          score++; renderPStars();
+          confetti(); tingBenar();
+          try{ speechSynthesis.cancel(); }catch(e){}
+          let lanjut = false;
+          const go = () => { if(!lanjut){ lanjut = true; nextPasang(); } };
+          setTimeout(go, 15000); // cadangan
+          setTimeout(() => {
+            if(!paktif) return;
+            say(`Alhamdulillah, ${NAMA} betul!`);
+            say(`Ayo lanjutkan ${NAMA}!`, go);
+          }, 700);
+        } else {
+          tingBenar();
+          setTimeout(() => { if(paktif) say('Sama!'); }, 400);
+          plock = false;
+        }
+      }, 900);
+    } else {
+      // BEDA
+      setTimeout(() => {
+        if(!paktif) return;
+        tingSalah();
+        try{ speechSynthesis.cancel(); }catch(e){}
+        setTimeout(() => { if(paktif) say(`Belum sama. Coba lagi ya ${NAMA}`); }, 400);
+      }, 900);
+      setTimeout(() => {
+        if(!paktif) return;
+        a.buka = false; b.buka = false;
+        pbuka = []; plock = false;
+        renderPasang();
+      }, 2300);
+    }
+  }
+}
+
+// ================= MULAI =================
+muatNama();
+renderNama();
+</script>
+</body>
+</html>
