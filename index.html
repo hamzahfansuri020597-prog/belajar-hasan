@@ -135,12 +135,19 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
 </div>
   
 <script>
-window.onerror = function(msg, src, baris, kolom){
-  var d = document.createElement('div');
-  d.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#b71c1c;color:#fff;padding:10px;font:14px monospace;text-align:left';
-  d.textContent = 'ERROR: ' + msg + ' (baris ' + baris + ')';
-  document.body.appendChild(d);
-};
+(function(){
+  var box;
+  window.addEventListener('error', function(e){
+    if(!box){
+      box = document.createElement('div');
+      box.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b71c1c;color:#fff;padding:8px;font:12px monospace;text-align:left;max-height:40vh;overflow:auto';
+      document.body.appendChild(box);
+    }
+    var p = document.createElement('div');
+    p.textContent = '#' + (box.children.length+1) + ' ' + e.message + ' (baris ' + e.lineno + ')';
+    box.appendChild(p);
+  });
+})();
 </script>
 <script>
 // ====== NAMA ANAK ======
