@@ -133,7 +133,15 @@ h1{font-size:2rem;margin:20px 0 10px;color:#ff7043}
   <div id="pq" style="font-size:1.6rem;font-weight:bold;color:#5d4037;margin:6px 12px">Cari gambar yang sama!</div>
   <div class="jgrid" id="pgrid"></div>
 </div>
-
+  
+<script>
+window.onerror = function(msg, src, baris, kolom){
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#b71c1c;color:#fff;padding:10px;font:14px monospace;text-align:left';
+  d.textContent = 'ERROR: ' + msg + ' (baris ' + baris + ')';
+  document.body.appendChild(d);
+};
+</script>
 <script>
 // ====== NAMA ANAK ======
 // Nama yang dipilih di menu. Daftar nama dikelola lewat tombol di menu (tersimpan di perangkat).
